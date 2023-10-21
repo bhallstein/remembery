@@ -1,0 +1,31 @@
+{
+  "type": "module",
+  "name": "remembery",
+  "version": "0.0.1",
+  "description": "Remember stuff",
+  "main": "remembery.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bhallstein/remembery"
+  },
+  "keywords": [
+    "memory"
+  ],
+  "scripts": {
+    "run": "node --experimental-json-modules remembery.js"
+  },
+  "author": "Benjamim Hall",
+  "license": "MIT",
+  "homepage": "https://github.com/bhallstein/remembery#readme",
+  "dependencies": {
+    "lodash-es": "^4.17.21",
+    "readline-sync": "1.4.10",
+    "sade": "1.8.1"
+  },
+  "devDependencies": {
+    "eslint": "8.52.0",
+    "eslint-plugin-import": "2.28.1",
+    "eslint-plugin-simple-import-sort": "10.0.0",
+    "eslint-plugin-unused-imports": "3.0.0"
+  }
+}
