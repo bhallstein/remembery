@@ -5,9 +5,11 @@ import {readFileSync, realpathSync} from 'node:fs'
 import {dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
 
+import {shuffle} from 'lodash-es'
 import sade from 'sade'
 
-import {compare_answer, get_files_list, prompt_until_success, rand_fromm} from './helpers.js'
+import {assert, get_files_list, loose_str_compare, print, prompt_until_success} from './helpers.js'
+
 
 const pkg = JSON.parse(readFileSync('./package.json'))
 const dir = realpathSync(dirname(fileURLToPath(import.meta.url)))
@@ -28,13 +30,13 @@ remembery
   .action(action__edit)
 
 remembery
-  .command('testme <file>')
+  .command('test <file>')
   .describe('Test yourself on the contents of a remembery file')
   .option('-n', 'Limit the number of tests', 10E6)
-  .option('--rand', 'Randomise test order', false)
-  .example('remembery testme vocab ')
-  .example('remembery testme vocab --rand')
-  .action(action__testme)
+  .example('remembery test spanish-vocab ')
+  .example('remembery test capitals')
+  .example('remembery test capitals.europe -n 10')
+  .action(action__test)
 
 remembery.parse(process.argv)
 
@@ -44,8 +46,8 @@ remembery.parse(process.argv)
 
 function action__list() {
   const files = get_files_list(files_dir)
-  files.forEach(console.log)
-  !files.length && console.log(`No files found in ${files_dir}`)
+  files.forEach(print)
+  !files.length && print(`No files found in ${files_dir}`)
 }
 
 
@@ -62,41 +64,67 @@ function action__edit(file) {
 // action__testmr
 // -------------------------------------------------
 
-function action__testme(file, {n, rand}) {
-  const file_path = `${files_dir}/${file}`
-  try {
-    const str = readFileSync(file_path).toString()
-    const items = str.split('\n')
-      .map(line => line.split(':'))
-      .filter(item => item.length === 2)
-      .map(([key, value]) => ({
-        key: key.trim(),
-        value: value.trim(),
-      }))
+function action__test(file, {n}) {
+  const file_parts = file.split('.')
+  assert([1, 2].includes(file_parts.length), '<file> must be in form filename or filename.section')
 
-    if (items.length === 0) {
-      console.warn('No items in file. Exiting.')
+  const file_path = `${files_dir}/${file_parts[0]}`
+  const test_section = file_parts[1]
+
+  try {
+    let current_section
+    const entries = readFileSync(file_path).toString().split('\n')
+      .reduce((carry, line) => {
+        const section_heading = line.match(/^\[(.*)\]$/)?.[1]
+        if (section_heading) {
+          assert(section_heading !== 'all', '"all" cannot be used as a section section_heading')
+          current_section = section_heading
+          carry[section_heading] = carry[section_heading] || []
+          return carry
+        }
+
+        const key_value = line?.split(':')
+        if (key_value?.length !== 2) {
+          return carry
+        }
+        const [key, value] = key_value
+        const item = {key: key.trim(), value: value.trim()}
+
+        carry.all.push(item)
+        carry[current_section]?.push(item)
+
+        return carry
+      }, {all: []})
+
+    Object.keys(entries).forEach(key => entries[key] = shuffle(entries[key]))
+
+    let section_entries = entries.all
+    if (test_section) {
+      const section_key = Object.keys(entries).find(sec => loose_str_compare(sec, test_section))
+      assert(section_key, `Section '${test_section}' not found in memory file.`)
+      section_entries = entries[section_key]
+    }
+
+    if (!section_entries?.length) {
+      console.warn('No entries found. Exiting.')
       return
     }
 
-    for (let i=0; i < Number(n); ++i) {
-      const item = rand
-        ? rand_fromm(items)
-        : items[i % items.length]
-
+    const entries_arr = section_entries.slice(0, n ? Math.min(n, section_entries.length) : section_entries.length)
+    entries_arr.forEach(item => {
       let passed = false
       while (!passed) {
         const response = prompt_until_success(`${item.key}: `)
         if (['?', 'dunno', 'not sure'].includes(response)) {
-          console.log('∟ The answer is:', item.value)
+          print('∟ The answer is:', item.value)
           passed = true
           continue
         }
-        passed = compare_answer(response, item.value)
-        passed && console.log('∟ Correct ✔︎')
-        !passed && console.log('∟ Incorrect ✘')
+        passed = loose_str_compare(response, item.value)
+        passed && print('∟ Correct ✔︎')
+        !passed && print('∟ Incorrect ✘')
       }
-    }
+    })
   }
   catch (err) {
     console.error(`Error: unable to read ${file_path}.`, err)

@@ -46,16 +46,16 @@ export function prompt_until_success(prompt) {
 // rand_from
 // -------------------------------------------------
 
-export function rand_fromm(arr) {
+export function rand_from(arr) {
   const i = Math.floor(Math.random() * arr.length)
   return arr[i]
 }
 
 
-// compare_answer
+// loose_str_compare
 // -------------------------------------------------
 
-export function compare_answer(x, y) {
+export function loose_str_compare(x, y) {
   function normalise(str) {
     return str.trim()
       .toLowerCase()
@@ -65,3 +65,20 @@ export function compare_answer(x, y) {
   return x && y && normalise(x) === normalise(y)
 }
 
+
+// assert
+// -------------------------------------------------
+
+export function assert(assertion, error_msg) {
+  if (!assertion) {
+    throw Error(error_msg || 'unknown error')
+  }
+}
+
+
+// print
+// --
+
+export function print(...args) {
+  console.log(...args)
+}
