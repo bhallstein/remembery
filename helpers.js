@@ -55,14 +55,19 @@ export function rand_from(arr) {
 // loose_str_compare
 // -------------------------------------------------
 
-export function loose_str_compare(x, y) {
-  function normalise(str) {
-    return str.trim()
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-  }
+const normalise = str => str.trim()
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
 
+export function loose_str_compare(x, y) {
   return x && y && normalise(x) === normalise(y)
+}
+
+export function very_loose_str_compare(response, actual) {
+  response = normalise(response)
+  actual = normalise(actual)
+
+  return actual.includes(response)
 }
 
 

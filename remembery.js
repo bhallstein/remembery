@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url'
 import {shuffle} from 'lodash-es'
 import sade from 'sade'
 
-import {assert, get_files_list, loose_str_compare, print, prompt_until_success} from './helpers.js'
+import {assert, get_files_list, loose_str_compare, print, prompt_until_success, very_loose_str_compare} from './helpers.js'
 
 
 const pkg = JSON.parse(readFileSync('./package.json'))
@@ -130,7 +130,10 @@ function action__test(file, {n: opt_n, r: opt_r, o: opt_o}) {
         }
         passed = loose_str_compare(response, item.value)
         passed && print('∟ Correct ✔︎')
-        !passed && print('∟ Incorrect ✘')
+        if (!passed) {
+          const similar = very_loose_str_compare(response, item.value)
+          print(similar ? '∟ Almost, not quite ✘' : '∟ Incorrect ✘')
+        }
       }
     })
   }
