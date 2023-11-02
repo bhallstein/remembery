@@ -34,6 +34,7 @@ remembery
   .describe('Test yourself on the contents of a remembery file')
   .option('n', 'Limit the number of tests', 10E6)
   .option('r', 'Reverse the questions/answers')
+  .option('o', 'Test in file order, as opposed to randomising')
   .example('remembery test spanish-vocab ')
   .example('remembery test capitals')
   .example('remembery test capitals.europe -n 10')
@@ -65,7 +66,7 @@ function action__edit(file) {
 // action__testmr
 // -------------------------------------------------
 
-function action__test(file, {n: opt_n, r: opt_r}) {
+function action__test(file, {n: opt_n, r: opt_r, o: opt_o}) {
   const file_parts = file.split('.')
   assert([1, 2].includes(file_parts.length), '<file> must be in form filename or filename.section')
 
@@ -97,7 +98,9 @@ function action__test(file, {n: opt_n, r: opt_r}) {
         return carry
       }, {all: []})
 
-    Object.keys(entries).forEach(key => entries[key] = shuffle(entries[key]))
+    if (!opt_o) {
+      Object.keys(entries).forEach(key => entries[key] = shuffle(entries[key]))
+    }
 
     let section_entries = entries.all
     if (test_section) {
