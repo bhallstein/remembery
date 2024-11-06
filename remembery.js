@@ -35,7 +35,7 @@ remembery
   .option('n', 'Limit the number of tests', 10E6)
   .option('r', 'Reverse the questions/answers')
   .option('o', 'Test in file order, as opposed to randomising')
-  .example('remembery test spanish-vocab ')
+  .example('remembery test spanish-vocab')
   .example('remembery test capitals')
   .example('remembery test capitals.europe -n 10')
   .action(action__test)
@@ -48,8 +48,12 @@ remembery.parse(process.argv)
 
 function action__list() {
   const files = get_files_list(files_dir)
-  files.forEach(print)
-  !files.length && print(`No files found in ${files_dir}`)
+  if (!files.length) {
+    print(`No files found in ${files_dir}`)
+  }
+
+  print('Available remembery files:')
+  files.forEach(file => print(`- ${file}`))
 }
 
 
